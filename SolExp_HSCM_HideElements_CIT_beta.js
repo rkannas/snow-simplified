@@ -7,6 +7,8 @@
 // @match        https://itsm.services.sap/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=stackoverflow.com
 // @grant        GM_addStyle
+// @resource     REMOTE_CSS https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css
+// @grant        GM_getResourceText
 // @run-at      document-idle
 // ==/UserScript==
 
@@ -99,6 +101,9 @@
     var activities_font_size = "13px"; //Set the activities font size
     var font_family = "Verdana"; //Set the font type for activities...
    */
+
+    const fontAwCss = GM_getResourceText("REMOTE_CSS");
+    GM_addStyle(fontAwCss);
 
   GM_addStyle(
     ".hbtn { background-color: #e0f5f0;color: #007958; cursor: pointer;padding: 2px 10px 3px 10px;text-decoration: none;margin-right: 10px;border-radius: 4px; box-sizing: border-box;font-weight: 500;border: 1px solid #b4e5d9; }"
@@ -567,7 +572,7 @@
             let InfoSpanText = document.createElement("span");
             InfoSpanText.innerText = "Solution Rejected";
             InfoSpanText.style.font = activity_field_fontStyle_weight;
-            InfoSpanText.style.color = "red;"
+            InfoSpanText.style.color = "red"
             InfoSpanText.style.marginRight = "20px";
             item_field_node.parentElement.parentElement.parentElement.parentElement.childNodes[1].prepend(InfoSpanText);
         }
@@ -618,7 +623,7 @@
         item_field_node.childNodes[0].style.font = activity_field_fontStyle;
 
         let FindAnchors = desc_content_div.getElementsByTagName("a"); //If any anchors tags are there dont format the initial Submission
-        if (FindAnchors.length < 99) {
+        if (FindAnchors.length == 0) {
           let Msglines = desc_content_div_text.split(/\r?\n/);
           let new_html_cont = "";
 
@@ -639,15 +644,15 @@
             } else {
               if (i == 0) {
                 new_html_cont =
-                  new_html_cont + "<span style='color:blue;margin-left:25px;'>";
-                new_html_cont = new_html_cont + curr_line + "</span>";
+                  new_html_cont + "<div style='color:blue;display:block;margin-left:25px;'>";
+                new_html_cont = new_html_cont + curr_line + "</div>";
               } else {
                 if (curr_line !== "") {
                   new_html_cont =
                     new_html_cont +
-                    "<span style='color:blue;margin-left:25px;'>";
+                    "<div style='color:blue;display:block;margin-left:25px;'>";
                   new_html_cont =
-                    new_html_cont + "<br>" + curr_line + "</span>";
+                    new_html_cont + curr_line + "</div>";
                 }
               }
             }
