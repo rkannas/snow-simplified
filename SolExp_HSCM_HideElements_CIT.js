@@ -1,12 +1,14 @@
 // ==UserScript==
-// @name         SolExp_HSCM_HideElements_CIT
+// @name         SolExp_HSCM_HideElements_CIT_beta
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Simplied HSCM Service Now Portal For CIT Team
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=stackoverflow.com
-// @grant        none
+// @grant        GM_addStyle
+// @resource     REMOTE_CSS https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css
+// @grant        GM_getResourceText
 // @run-at      document-idle
 // ==/UserScript==
 
@@ -95,10 +97,19 @@
   //******************Start of Developer Area************************
 
   /*
-  var increase_activity_font_size = true;
-  var activities_font_size = "13px"; //Set the activities font size
-  var font_family = "Verdana"; //Set the font type for activities...
- */
+    var increase_activity_font_size = true;
+    var activities_font_size = "13px"; //Set the activities font size
+    var font_family = "Verdana"; //Set the font type for activities...
+   */
+
+    let fontAwCss = GM_getResourceText("REMOTE_CSS");
+
+    fontAwCss = fontAwCss.replace(/..\/webfonts\//g, 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/webfonts/');
+    GM_addStyle(fontAwCss);
+
+  GM_addStyle(
+    ".hbtn { background-color: #e0f5f0;color: #007958; cursor: pointer;padding: 2px 10px 3px 10px;text-decoration: none;margin-right: 10px;border-radius: 4px; box-sizing: border-box;font-weight: 500;border: 1px solid #b4e5d9; }"
+  );
 
   var col_css = "color:#c411e8;font-weight: 600"; // Default color to print in console (Works only in chrome)
   var fieldChangeBlockCount = 0;
@@ -128,7 +139,7 @@
         print("Load event Completed");
         simplifySnow();
       },
-      true
+      false
     );
   }
 
@@ -171,6 +182,11 @@
         SetBackgroundColorById("awaiting_requestor", color_send_reply); // Send Reply button color
         SetBackgroundColorById("reroute_incident", color_reroute_init); //Reroute initiaal level button color
 
+        SetFontAwesomeIcon("sysverb_update","fa-solid","fa-floppy-disk");
+        SetFontAwesomeIcon("ws_assign_incident_to_me","fa-solid", "fa-user-plus");
+        SetFontAwesomeIcon("resolve_incident","fa-solid", "fa-thumbs-up");
+        SetFontAwesomeIcon("awaiting_requestor", "fa-solid","fa-reply");
+
         //Hide the below button bar after commetns
         if (hide_buttonb_bar_bottom)
           document.getElementsByClassName(
@@ -207,7 +223,11 @@
           document.getElementById("incident.u_affected_area").value =
             "application";
           document.getElementById("incident.u_symptom").value = "other_specify";
-          document.getElementById("ni.incident.u_notes_to_comments").click();
+          if (
+            document.getElementById("ni.incident.u_notes_to_comments")
+              .checked == false
+          )
+            document.getElementById("ni.incident.u_notes_to_comments").click();
         }
 
         //Hide Related Searches
@@ -367,16 +387,27 @@
           }
         }
 
-        if (skip_save_dialog) {
-          window.onbeforeunload = function () {
-            // Your Code here
-            return null; // return null to avoid pop up
-          };
+        waitForElm("#dirty_form_modal_confirmation").then((elm) => {
+          elm.querySelector('button[data-action="discard"]').click();
+        });
 
-          waitForElm("#dirty_form_modal_confirmation").then((elm) => {
-            elm.querySelector('button[data-action="discard"]').click();
-          });
-        }
+        //-------Add page bottom button---------------
+        let comm_elm = document.getElementById("element.incident.u_message");
+
+        let but_scroll_down = document.createElement("span");
+        but_scroll_down.innerHTML = "Scroll botton";
+        but_scroll_down.classList.add("hbtn");
+        but_scroll_down.style.marginTop = "23px";
+
+        let scroll_handler = function () {
+          let scroll_elm = document.getElementById("incident.form_scroll");
+          if(hide_all_junk_tabs)
+                 scroll_elm.scrollTop = scroll_elm.scrollHeight;
+          else
+                scroll_elm.scrollTop = (scroll_elm.scrollHeight - 800 );
+        };
+        but_scroll_down.onclick = scroll_handler;
+        comm_elm = comm_elm.append(but_scroll_down);
       }
       // List Page Modification...
       else if (
@@ -427,6 +458,7 @@
         if (lv_isSolutonProided) {
           info_elem.parentElement.parentElement.parentElement.style.backgroundColor =
             "#f0ffed"; //Light GreenparentElement.parentElement.parentElement.
+
         } else if (isPrevRejectionFieldChange) {
           //If previous block is rejection block then this is the comment of rejection
           info_elem.parentElement.parentElement.parentElement.style.backgroundColor =
@@ -440,6 +472,9 @@
     } else if (activity_type == "Field changes") {
       let info_elem = itemActivityElem.childNodes[0].childNodes[0]; //Ul Element with list of fields
       if (fieldChangeBlockCount == 1) {
+        itemActivityElem.parentElement.childNodes[1].childNodes[0].style.display =
+          "none";
+        itemActivityElem.style.display = "inline-block";
         //This is the inital posted by requester
         formatInitialSubmission(info_elem);
       } else {
@@ -478,6 +513,16 @@
           item_field_node.childNodes[1].childNodes[0].style.color = "#ee0935"; //word
           item_field_node.childNodes[1].childNodes[0].style.font =
             activity_field_fontStyle_weight;
+
+
+          let InfoSpanText = document.createElement("span");
+              InfoSpanText.innerText = item_field_node.childNodes[1].childNodes[0].innerText;
+              InfoSpanText.style.font = activity_field_fontStyle_weight;
+              InfoSpanText.style.color = "#ee0935";
+              InfoSpanText.style.marginRight = "20px";
+
+         item_field_node.parentElement.parentElement.parentElement.parentElement.childNodes[1].prepend(InfoSpanText);
+
           formatBusinessImpact(item_field_node);
         } else if (
           (item_field_node.childNodes[1].childNodes[0].innerText.charAt(0) ==
@@ -490,9 +535,18 @@
               "2")
         ) {
           //Medium and Low
-          item_field_node.childNodes[1].childNodes[0].style.color = " #0f8f3e";
+          item_field_node.childNodes[1].childNodes[0].style.color = "#0f8f3e";
           item_field_node.childNodes[1].childNodes[0].style.font =
             activity_field_fontStyle_weight;
+
+            let InfoSpanText = document.createElement("span");
+            InfoSpanText.innerText = item_field_node.childNodes[1].childNodes[0].innerText;
+            InfoSpanText.style.font = activity_field_fontStyle_weight;
+            InfoSpanText.style.color = "#0f8f3e";
+            InfoSpanText.style.marginRight = "20px";
+
+
+            item_field_node.parentElement.parentElement.parentElement.parentElement.childNodes[1].prepend(InfoSpanText);
         }
       } else if (
         item_field_node.childNodes[0].innerText == "Assignment group" &&
@@ -502,13 +556,46 @@
         item_field_node.childNodes[1].childNodes[0].style.color = "#5a32af";
         item_field_node.childNodes[1].childNodes[0].style.font =
           activity_field_fontStyle_weight;
-      } else {
+
+          let InfoSpanText = document.createElement("span");
+          InfoSpanText.innerText = item_field_node.childNodes[1].childNodes[0].innerText;
+          InfoSpanText.style.font = activity_field_fontStyle_weight;
+          InfoSpanText.style.color = "#5a32af";
+          InfoSpanText.style.marginRight = "20px";
+
+          item_field_node.parentElement.parentElement.parentElement.parentElement.childNodes[1].prepend(InfoSpanText);
+
+      }
+      else {
         item_field_node.childNodes[0].style.font = activity_field_fontStyle;
         item_field_node.childNodes[1].style.font = activity_field_fontStyle;
       }
       foundRejection =
         item_field_node.childNodes[0].innerText == "State" &&
         item_field_node.childNodes[1].childNodes[2].innerText == "Resolved"; //it is a rejection field changes block
+
+        if(foundRejection)
+        {
+            let InfoSpanText = document.createElement("span");
+            InfoSpanText.innerText = "Solution Rejected";
+            InfoSpanText.style.font = activity_field_fontStyle_weight;
+            InfoSpanText.style.color = "red"
+            InfoSpanText.style.marginRight = "20px";
+            item_field_node.parentElement.parentElement.parentElement.parentElement.childNodes[1].prepend(InfoSpanText);
+        }
+
+        let lv_foundSolved =
+        item_field_node.childNodes[0].innerText == "State" &&
+        item_field_node.childNodes[1].childNodes[0].innerText == "Resolved"; //it is a rejection field changes block
+        if(lv_foundSolved)
+        {
+            let InfoSpanText = document.createElement("span");
+            InfoSpanText.innerText = "Solution Provided";
+            InfoSpanText.style.font = activity_field_fontStyle_weight;
+            InfoSpanText.style.color = "green";
+            InfoSpanText.style.marginRight = "20px";
+            item_field_node.parentElement.parentElement.parentElement.parentElement.childNodes[1].prepend(InfoSpanText);
+        }
     }
 
     isPrevRejectionFieldChange = foundRejection;
@@ -545,7 +632,6 @@
         let FindAnchors = desc_content_div.getElementsByTagName("a"); //If any anchors tags are there dont format the initial Submission
         if (FindAnchors.length == 0) {
           let Msglines = desc_content_div_text.split(/\r?\n/);
-
           let new_html_cont = "";
 
           item_field_node.childNodes[1].style.font = activity_field_fontStyle;
@@ -563,14 +649,17 @@
                 }
               }
             } else {
-              new_html_cont =
-                new_html_cont + "<span style='color:blue;margin-left:25px'>";
               if (i == 0) {
-                new_html_cont = new_html_cont + curr_line + "</span>";
+                new_html_cont =
+                  new_html_cont + "<div style='color:blue;display:block;margin-left:25px;'>";
+                new_html_cont = new_html_cont + curr_line + "</div>";
               } else {
                 if (curr_line !== "") {
                   new_html_cont =
-                    new_html_cont + "<br>" + curr_line + "</span>";
+                    new_html_cont +
+                    "<div style='color:blue;display:block;margin-left:25px;'>";
+                  new_html_cont =
+                    new_html_cont + curr_line + "</div>";
                 }
               }
             }
@@ -667,6 +756,7 @@
     const actvity_name_color = "#2c5cc5";
     //   const actvity_name_fontSize = "14px";
     //   const activity_name_fontWeight = "600";
+    itemActivityElem.style.width = "35%";  //Decreate the Width for name so we can print Assigment group in header of Field changes
     const activity_name_fontStyle =
       'normal 600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 
@@ -685,32 +775,37 @@
     if (activity_type == "Internal Info" || activity_type == "External Info") {
       itemActivityElem.style.font = activity_meta_fontStyle;
       itemActivityElem.style.color = actvity_meta_color;
-    } else {
+    } else if (activity_type == "Field changes") {
       hideFormFieldActivity(itemActivityElem);
     }
 
     return activity_type;
   }
 
-  function hideFormFieldActivity(itemActivityElem)
-  {
-    let button = document.createElement("button");
-    button.innerHTML = "Expand";
-  
+  function hideFormFieldActivity(itemActivityElem) {
+    itemActivityElem.style.width = "65%"; //Increase the Width so we can print Assigment group in header of Field changes
+    itemActivityElem.parentElement.childNodes[2].style.display = "none"; //Hide Field Element View
+    let mybutton = document.createElement("span");
+    mybutton.innerHTML = "Expand";
+    mybutton.classList.add("hbtn");
 
-    button.addEventListener ("click", function() {
-      let lv_vis_status =  this.parentElement.childNodes[2].style.display;
-      if(lv_vis_status == "none")
-      {
-        this.parentElement.childNodes[2].style.display = "inline-block";
+    let handler = function () {
+      let lv_vis_status =
+        this.parentElement.parentElement.childNodes[2].style.display;
+      if (lv_vis_status == "none") {
+        this.innerHTML = "Collapse";
+        this.parentElement.parentElement.childNodes[2].style.display =
+          "inline-block";
+      } else {
+        this.innerHTML = "Expand";
+        this.parentElement.parentElement.childNodes[2].style.display = "none";
       }
-      else{
-        this.parentElement.childNodes[2].style.display = "none";
-      }
-    });
+    };
+    mybutton.onclick = handler;
 
-    itemActivityElem.prepend(button);
-    
+    //mybutton.addEventListener ("click", function(e) );
+
+    itemActivityElem.prepend(mybutton);
   }
 
   function ValidateAndLoadListPage() {
@@ -789,6 +884,16 @@
     if (gv_browser == "Chrome") console.log("%c===>" + val + "<===", col_css);
     else console.log("===>" + val + "<===");
   }
+
+    function SetFontAwesomeIcon(lv_elem_id,lv_firstClass, lv_secondClass)
+    {
+          let item = document.getElementById(lv_elem_id);
+          if (item !== null) {
+              var fontElIcon = document.createElement("i");
+               fontElIcon.classList.add(lv_firstClass, lv_secondClass);
+               item.prepend(fontElIcon);
+          }
+    }
 
   function detectBrowser() {
     if (
