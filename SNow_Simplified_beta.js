@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SNow_Simplified_Beta
 // @namespace    http://tampermonkey.net/
-// @version      1.01
+// @version      1.02
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
@@ -861,18 +861,21 @@
 
     //Align Buttons to Center
     if (align_but_center) {
+
       let nav_cont = document.getElementsByClassName("navbar_ui_actions")[0];
-      if (
-        nav_cont.parentElement.classList.contains(
-          "ui_action_container_overflow"
-        )
-      ) {
-        nav_cont.style.textAlign = "center";
-      } else {
-        //For status Awaiting info
-        nav_cont.style.textAlign = "center";
-        nav_cont.style.display = "block";
-        nav_cont.parentElement.parentElement.parentElement.classList.remove('navbar-right');
+      nav_cont.parentElement.parentElement.parentElement.classList.remove('navbar-right');
+      let nav_cont_parent = nav_cont.parentElement;
+      if(nav_cont_parent.nextSibling.classList.contains('record-paging-nowrap'))
+      {
+        nav_cont_parent.style.marginLeft = "15%";
+        nav_cont_parent.style.marginRight = "15%";
+      }
+      else
+      {
+        //Doesnt' contain up arrow and down arrow.
+        nav_cont_parent.style.marginLeft = "15%";
+        nav_cont_parent.style.marginRight = "30%";
+
       }
     }
   }
