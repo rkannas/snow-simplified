@@ -1,10 +1,11 @@
 // ==UserScript==
-// @name         SNow_Simplified
+// @name         SNow_Simplified_Beta
 // @namespace    http://tampermonkey.net/
-// @version      0.9
+// @version      1.01
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
+// @match        https://sap.service-now.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=stackoverflow.com
 // @grant        GM_addStyle
 // @run-at      document-idle
@@ -64,6 +65,7 @@
     ["sysverb_update", "#F5FFFA"], //Update button, color: MintCream
     ["resolve_incident", "#C3FDB8"], //Resolve . Color: Light Jade
     ["awaiting_requestor", "#FFDAB9"], //Send Reply. Color: PeachPuff (W3C)
+    ["retrieve_incident", "#e3c2f0"],
   ];
 
   //---------------Default Message Type -----------------------------
@@ -144,16 +146,18 @@
       "awaiting_requestor",
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10,9V5L3,12L10,19V14.9C15,14.9 18.5,16.5 21,20C20,15 17,10 10,9Z" /></svg>',
     ],
+
+    [
+      "retrieve_incident",
+      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16,3V5H8V3H16M16,7V9H8V7H16M16,11V13H8V11H16M5,15H19L12,22L5,15Z" /></svg>',
+    ],
   ];
 
   const expand_btn_css =
     ".expand { background-color: #e0f5f0;color: #007958; cursor: pointer;padding: 2px 10px 3px 10px;text-decoration: none;margin-right: 10px;border-radius: 4px; box-sizing: border-box;font-weight: 500;border: 1px solid #b4e5d9; }";
   const console_css = "color:#c411e8;font-weight: 600"; // Default color to print in console (Works only in chrome)
 
-  //const cust_text_area = "#tinymce { font: normal 400 14px/21px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif; }";
-  const cust_text_area = ".mce-content-body > p {color:red }";
   GM_addStyle(expand_btn_css); // will be used in Field Changes Block for expand hide.
-  GM_addStyle(cust_text_area);
 
   let fieldChangeBlockCount = 0; //Count the number Field Changes Block
   let isPrevRejectionFieldChange = false; //Check whether Previous Block is Field Changes Block
@@ -202,7 +206,7 @@
         processMidSectionTabs();
         hideBottomToolbarAndLinks();
         hideBottomChildTabs();
-        autoDiscardonBackButton();
+        autoDiscardOnBackButton();
       }
       //Filter incidents page ...
       else if (
@@ -214,7 +218,7 @@
     }
   }
 
-  function autoDiscardonBackButton() {
+  function autoDiscardOnBackButton() {
     //Auto dicard changes on click on back button..
     waitForElm("#dirty_form_modal_confirmation").then((elm) => {
       elm.querySelector('button[data-action="discard"]').click();
@@ -245,7 +249,8 @@
     lv_resol_txt_edit.style.font = text_area_font;
 
     if (enable_resolution_fields_default) {
-      document.getElementById("incident.close_code").value = "solved_fix_provided";
+      document.getElementById("incident.close_code").value =
+        "solved_fix_provided";
       document.getElementById("incident.u_affected_area").value = "application";
       document.getElementById("incident.u_symptom").value = "other_specify";
       if (!document.getElementById("ni.incident.u_notes_to_comments").checked) {
@@ -308,7 +313,7 @@
         for (let i = 0; i < lv_tab_list.length; i++) {
           //Tab 3 is the Incident Tasks where External reaction tickets can be added
           if (i == 3) {
-             lv_tab_list[i].click();
+            lv_tab_list[i].click();
           } else {
             lv_tab_list[i].style.display = "none";
           }
@@ -422,11 +427,21 @@
 
   //Start of Communication tabs functions
   function processCommTabTextArea() {
-    let iframeCommCont = document.getElementById("incident.u_message_ifr"); //Iframe container for text area
-    iframeCommCont.style.height = "170px";
-    iframeCommCont.style.font = text_area_font;
-    let textAreaBody = iframeCommCont.contentDocument.getElementById("tinymce");
-    textAreaBody.style.font = text_area_font;
+    waitForElm("#incident.u_message_ifr").then((elm) => {
+      elm.style.height = "170px";
+      elm.style.font = text_area_font;
+      let textAreaBody = elm.contentDocument.getElementById("tinymce");
+      textAreaBody.style.font = text_area_font;
+    });
+
+    /*
+            let iframeCommCont = document.getElementById("incident.u_message_ifr"); //Iframe container for text area
+        
+              iframeCommCont.style.height = "170px";
+              iframeCommCont.style.font = text_area_font;
+              let textAreaBody = iframeCommCont.contentDocument.getElementById("tinymce");
+              textAreaBody.style.font = text_area_font;
+          */
   }
 
   //start of activity formatting functions
@@ -575,6 +590,13 @@
 
     //Forth other Field Changes
     function formatActivityFieldChangesOther(infoCont) {
+      if (!infoCont.classList.contains("sn-card-component_records")) {
+        //Might be attachments..
+        infoCont.style.font = activity_def_font;
+        return;
+      }
+
+      //The field chagnes contains the list of recors.
       let ulList = infoCont.childNodes[0].childNodes[0];
       ulList.style.font = activity_def_font;
       for (let i = 0; i < ulList.childNodes.length; i++) {
@@ -838,9 +860,21 @@
     addColorsToButtons();
 
     //Align Buttons to Center
-    if (align_but_center)
-      document.getElementsByClassName("navbar_ui_actions")[0].style.textAlign =
-        "center";
+    if (align_but_center) {
+      let nav_cont = document.getElementsByClassName("navbar_ui_actions")[0];
+      if (
+        nav_cont.parentElement.classList.contains(
+          "ui_action_container_overflow"
+        )
+      ) {
+        nav_cont.style.textAlign = "center";
+      } else {
+        //For status Awaiting info
+        nav_cont.style.textAlign = "center";
+        nav_cont.style.display = "block";
+        nav_cont.parentElement.parentElement.parentElement.classList.remove('navbar-right');
+      }
+    }
   }
 
   function addIconsToButtons() {

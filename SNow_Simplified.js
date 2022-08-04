@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         SNow_Simplified
 // @namespace    http://tampermonkey.net/
-// @version      0.9
+// @version      1.0
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
+// @match        https://sap.service-now.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=stackoverflow.com
 // @grant        GM_addStyle
 // @run-at      document-idle
@@ -423,10 +424,19 @@
   //Start of Communication tabs functions
   function processCommTabTextArea() {
     let iframeCommCont = document.getElementById("incident.u_message_ifr"); //Iframe container for text area
-    iframeCommCont.style.height = "170px";
-    iframeCommCont.style.font = text_area_font;
-    let textAreaBody = iframeCommCont.contentDocument.getElementById("tinymce");
-    textAreaBody.style.font = text_area_font;
+    if(iframeCommCont == null)
+    {
+
+    }
+    else
+    {
+      iframeCommCont.style.height = "170px";
+      iframeCommCont.style.font = text_area_font;
+      let textAreaBody = iframeCommCont.contentDocument.getElementById("tinymce");
+      textAreaBody.style.font = text_area_font;
+    }
+
+
   }
 
   //start of activity formatting functions
