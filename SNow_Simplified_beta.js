@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SNow_Simplified_Beta
 // @namespace    http://tampermonkey.net/
-// @version      1.02
+// @version      1.1
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
@@ -29,7 +29,7 @@
   const hide_but_forward_next_level = true; // Hide Forward to next level
 
   //---------------Align Top buttons to Center-----------------------
-  const align_but_center = true; //Alighns all buttons to the center
+  const align_but_center = true; //Align all buttons to the center
 
   //--------------Hide default warnign message on load---------------
 
@@ -123,6 +123,34 @@
   //******************Start of Developer Area*************************
 
   //-------------------Run Time Variables------------------------
+  const questions = [
+    "1.Please provide Landscape details and System ID/Client. Also explicitly mention if it is a private landscape/ Cloud Tenant (if it is cloud systems then provide tenant /logon).",
+    "e.g.:  GSA - Public MG4/001 HE4/400 or S/4HC E0T (provide tenant URL)",
+    "2.  Demo Scenario ID & Page Number (if applicable)? - Error description and steps to reproduce the error with screenshot/recordings.",
+    "3. Demo date & time and Demo ID (if applicable)?",
+    "4. Please provide affected demo Users [ eg. purchaser or a personal demo user ( I/C/D) ]?",
+    "5. Are you accessing Secure Demo Access or Storefront /Citrix Desktop? (*applicable for SDE landscape only)",
+    "6. Information of your Network/Device.",
+    "• Network type – F5-VPN or WiFi",
+    "• Device Type - Laptop, Mobile Device",
+    "Note: The Support SLAs exist only for Standard Scripts. We'll support any issues outside of this, but we are not governed by any SLAs",
+    "1. Basic Information",
+    "a. Demo ID from Demo Calendar ?",
+    "b. Demo Date and Time ?",
+    "c. How can you be contacted ?",
+    "2. Demo Realm/Network Info",
+    "a. What Demo script (Script ID and Name) are you using?",
+    "a.\tWhat Demo script (Script ID and Name) are you using?",
+    "a. User-ID and Password ? If Network are you logging in a buyer or supplier?",
+    "b. Which Realm is used ?",
+    "c. If integrated scenario which landscape are you in ?",
+    "3. Detailed Problem Description",
+    "a. Issue description:",
+    "b. Steps to recreate the issue (screen shots or screen cam)",
+    "c. Master Data used (PO, Inv, contract...)",
+    "----------------------------------",
+  ];
+
   var curr_activity_type = "";
   var field_changes_block_cnt = 0;
   var is_prev_field_change_sol_provided = false;
@@ -159,8 +187,6 @@
 
   GM_addStyle(expand_btn_css); // will be used in Field Changes Block for expand hide.
 
-  let fieldChangeBlockCount = 0; //Count the number Field Changes Block
-  let isPrevRejectionFieldChange = false; //Check whether Previous Block is Field Changes Block
   var gvBrowser = detectBrowser(); // Find the Browser type
 
   var listPageLoaded = false; //Variable to check whether load event is triggered for list page.
@@ -271,8 +297,6 @@
         lv_rel_search_section[1].style.display = "none";
       }
     }
-
-    //Increase the font size of Text Area
     //Increase the font size of Text Area
     //Inital Description  Tab
     let lv_iframe_initial_desc = document.getElementById(
@@ -298,42 +322,37 @@
 
   function hideBottomChildTabs() {
     if (hide_child_tabs && enable_incident_tasks) {
-      let lv_tabs2_list_cont = document.getElementById("tabs2_list");
+      waitForElm("#tabs2_list > span:nth-child(7) > span").then((elm) => {
+        hideChildExceptIncident();
+        // elm.click();
+      });
+      document.getElementById("page_timing_div").style.display = "none"; //load time  statistics of page
 
-      let lv_tab_sep_list =
-        lv_tabs2_list_cont.getElementsByClassName("tab_spacer"); //Seperator for each tab
-      if (lv_tab_sep_list !== "undefined") {
-        for (let i = 0; i < lv_tab_sep_list.length; i++) {
-          lv_tab_sep_list[i].style.display = "none";
+      function hideChildExceptIncident() {
+        let lv_tabs2_list_cont = document.getElementById("tabs2_list");
+
+        let lv_tab_sep_list =
+          lv_tabs2_list_cont.getElementsByClassName("tab_spacer"); //Seperator for each tab
+        if (lv_tab_sep_list.length > 0) {
+          for (let i = 0; i < lv_tab_sep_list.length; i++) {
+            lv_tab_sep_list[i].style.display = "none";
+          }
         }
-      }
 
-      let lv_tab_list = lv_tabs2_list_cont.getElementsByClassName("tab_header");
-      if (lv_tab_list !== "undefined") {
-        for (let i = 0; i < lv_tab_list.length; i++) {
-          //Tab 3 is the Incident Tasks where External reaction tickets can be added
-          if (i == 3) {
-            lv_tab_list[i].click();
-          } else {
-            lv_tab_list[i].style.display = "none";
+        let lv_tab_list =
+          lv_tabs2_list_cont.getElementsByClassName("tab_header");
+
+        if (lv_tab_list.length > 0) {
+          for (let i = 0; i < lv_tab_list.length; i++) {
+            //Tab 3 is the Incident Tasks where External reaction tickets can be added
+            if (i == 3) {
+              lv_tab_list[i].childNodes[0].click();
+            } else {
+              lv_tab_list[i].style.display = "none";
+            }
           }
         }
       }
-
-      let observer = new MutationObserver(function (mutations) {
-        mutations.forEach(function (mutationRecord) {
-          print("Mutation Triggered for Junk Tabs");
-
-          hideChildTabCont(mutationRecord.target);
-        });
-      });
-
-      observer.observe(lv_tabs2_list_cont, {
-        childList: true,
-        subtree: false,
-      });
-
-      document.getElementById("page_timing_div").style.display = "none"; //load time  statistics of page
     } else if (hide_child_tabs) {
       //hide all child tabs..
       let lv_tabs2_list = document.getElementById("tabs2_list"); //Parent Continer of list of tabs.
@@ -435,13 +454,13 @@
     });
 
     /*
-            let iframeCommCont = document.getElementById("incident.u_message_ifr"); //Iframe container for text area
+                            let iframeCommCont = document.getElementById("incident.u_message_ifr"); //Iframe container for text area
         
-              iframeCommCont.style.height = "170px";
-              iframeCommCont.style.font = text_area_font;
-              let textAreaBody = iframeCommCont.contentDocument.getElementById("tinymce");
-              textAreaBody.style.font = text_area_font;
-          */
+                              iframeCommCont.style.height = "170px";
+                              iframeCommCont.style.font = text_area_font;
+                              let textAreaBody = iframeCommCont.contentDocument.getElementById("tinymce");
+                              textAreaBody.style.font = text_area_font;
+                          */
   }
 
   //start of activity formatting functions
@@ -550,6 +569,7 @@
         formatActivityFieldChanges(infoCont);
       } else {
         //For future block elements.
+        infoCont.style.font = activity_def_font;
       }
     }
 
@@ -558,18 +578,18 @@
 
       if (info_elem != null) {
         info_elem.style.font = activity_def_font;
-        if (is_prev_field_change_sol_provided) {
-          info_elem.parentElement.parentElement.parentElement.style.backgroundColor =
-            "#f0ffed";
-          resetPrevFieldChangeStatus();
-        } else if (is_prev_field_change_sol_rejected) {
-          info_elem.parentElement.parentElement.parentElement.style.backgroundColor =
-            "#f5eae9";
-          resetPrevFieldChangeStatus();
-        } else {
-          info_elem.parentElement.parentElement.parentElement.style.backgroundImage =
-            "linear-gradient(#f5f7f9,#f5f7f9)"; //Grey color
-        }
+      } else {
+        infoCont.childNodes[0].style.font = activity_def_font;
+      }
+      if (is_prev_field_change_sol_provided) {
+        infoCont.parentElement.style.backgroundColor = "#f0ffed";
+        resetPrevFieldChangeStatus();
+      } else if (is_prev_field_change_sol_rejected) {
+        infoCont.parentElement.style.backgroundColor = "#f5eae9";
+        resetPrevFieldChangeStatus();
+      } else {
+        infoCont.parentElement.style.backgroundColor = "#F8F9F9";
+        //backgroundImage = "linear-gradient(#f5f7f9,#f5f7f9)"; //Grey color
       }
     }
 
@@ -714,6 +734,115 @@
             ulList.childNodes[i].childNodes[1].childNodes[0].shadowRoot
               .childNodes[0];
 
+          desc_content_div.style.font = activity_def_font;
+          let text_area_elements = desc_content_div.childNodes;
+          let new_html = "";
+
+          for (let i = 0; i < text_area_elements.length; i++) {
+            switch (text_area_elements[i].nodeName) {
+              case "P":
+                new_html = new_html + parseParagraph(text_area_elements[i]);
+
+                break;
+              case "BR":
+                new_html = new_html + "<br>";
+                break;
+              case "#text":
+                new_html =
+                  new_html + format_answer(text_area_elements[i].nodeValue);
+                break;
+              case "A":
+                break;
+              default:
+                console.log(
+                  "<---------------------some other element------------>"
+                );
+                break;
+            }
+          }
+          desc_content_div.innerHTML = new_html; //Set the formatter HTML
+
+
+          //Parse the Paragraph Tags..
+          function parseParagraph(elem) {
+            let new_html_p = "<p>";
+            let p_nodes = elem.childNodes;
+            for (let j = 0; j < p_nodes.length; j++)
+              switch (p_nodes[j].nodeName) {
+                case "BR":
+                  new_html_p = new_html_p + "<br>";
+                  break;
+                case "#text":
+                  new_html_p = new_html_p + format_answer(p_nodes[j].nodeValue);
+                  break;
+                case "A":
+                  new_html_p = new_html_p + parseAnchor(p_nodes[j]);
+                  break;
+                default:
+                  console.log(
+                    "<---------------------some other element------------>"
+                  );
+                  break;
+              }
+
+            new_html_p = new_html_p + "</p>";
+            return new_html_p;
+          }
+
+          //Parse the Anchor Tags
+          function parseAnchor(aElem) {
+            let a_html = "<a";
+            for (let k = 0; k < aElem.attributes.length; k++) {
+              a_html =
+                a_html +
+                " " +
+                aElem.attributes[k].nodeName +
+                '="' +
+                aElem.attributes[k].nodeValue +
+                '"';
+            }
+            a_html = a_html + ">";
+            a_html = a_html + aElem.innerHTML + "</a>";
+
+            return a_html;
+          }
+
+          function format_answer(text_msg) {
+
+            if (questions.includes(text_msg)) {
+              return text_msg;
+            } else {
+              return (
+                '<span style="margin-left:20px;color:' + requester_post_answer_color +'">' +
+                text_msg +
+                "</span>"
+              );
+            }
+          }
+        }
+      }
+    }
+
+    function formatActivityInitialSubmissionFiledChanges1(infoCont) {
+      let ulList = infoCont.childNodes[0].childNodes[0];
+      ulList.style.font = activity_def_font;
+      for (let i = 0; i < ulList.childNodes.length; i++) {
+        ulList.childNodes[i].childNodes[0].style.font = activity_def_info_font;
+        ulList.childNodes[i].childNodes[1].style.font = activity_def_info_font;
+
+        //format Priority
+        if (ulList.childNodes[i].childNodes[0].innerText == "Priority") {
+          ulList.childNodes[i].childNodes[1].style.color =
+            parseInt(ulList.childNodes[i].childNodes[1].innerText.charAt(0)) < 3
+              ? "red"
+              : "green";
+        } else if (
+          ulList.childNodes[i].childNodes[0].innerText == "Description"
+        ) {
+          let desc_content_div =
+            ulList.childNodes[i].childNodes[1].childNodes[0].shadowRoot
+              .childNodes[0];
+
           let FindAnchors = desc_content_div.getElementsByTagName("a"); //If any anchors tags are there dont format the initial Submission
 
           let Msglines = desc_content_div.innerText.split(/\r?\n/); // Split content based on line breaks
@@ -722,7 +851,7 @@
           if (FindAnchors.length == 0) {
             for (let i = 0; i < Msglines.length; i++) {
               let curr_line = Msglines[i].replace(/(\r\n|\n|\r)/gm, ""); //Replace any line breaks
-              if (questionSearch(Msglines[i])) {
+              if (questions.includes(Msglines[i])) {
                 if (i == 0) {
                   new_html_cont = new_html_cont + curr_line;
                 } else {
@@ -763,33 +892,6 @@
     }
 
     function questionSearch(line_text) {
-      const questions = [
-        "1.Please provide Landscape details and System ID/Client. Also explicitly mention if it is a private landscape/ Cloud Tenant (if it is cloud systems then provide tenant /logon).",
-        "e.g.:  GSA - Public MG4/001 HE4/400 or S/4HC E0T (provide tenant URL)",
-        "2.  Demo Scenario ID & Page Number (if applicable)? - Error description and steps to reproduce the error with screenshot/recordings.",
-        "3. Demo date & time and Demo ID (if applicable)?",
-        "4. Please provide affected demo Users [ eg. purchaser or a personal demo user ( I/C/D) ]?",
-        "5. Are you accessing Secure Demo Access or Storefront /Citrix Desktop? (*applicable for SDE landscape only)",
-        "6. Information of your Network/Device.",
-        "• Network type – F5-VPN or WiFi",
-        "• Device Type - Laptop, Mobile Device",
-        "Note: The Support SLAs exist only for Standard Scripts. We'll support any issues outside of this, but we are not governed by any SLAs",
-        "1. Basic Information",
-        "a. Demo ID from Demo Calendar ?",
-        "b. Demo Date and Time ?",
-        "c. How can you be contacted ?",
-        "2. Demo Realm/Network Info",
-        "a. What Demo script (Script ID and Name) are you using?",
-        "a. User-ID and Password ? If Network are you logging in a buyer or supplier?",
-        "b. Which Realm is used ?",
-        "c. If integrated scenario which landscape are you in ?",
-        "3. Detailed Problem Description",
-        "a. Issue description:",
-        "b. Steps to recreate the issue (screen shots or screen cam)",
-        "c. Master Data used (PO, Inv, contract...)",
-        "----------------------------------",
-      ];
-
       for (let i = 0; i < questions.length; i++) {
         if (line_text == questions[i]) {
           return true;
@@ -861,21 +963,45 @@
 
     //Align Buttons to Center
     if (align_but_center) {
+      alignTopButtons();
+      let header_but_toolbar_cont = document.getElementById(
+        "section-1078e6b4db4b33803da8366af4961918.header"
+      );
 
+      let navObserver = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutationRecord) {
+          print("Mutation Triggered for Navigation");
+          alignTopButtons();
+        });
+      });
+
+      navObserver.observe(header_but_toolbar_cont, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    function alignTopButtons() {
       let nav_cont = document.getElementsByClassName("navbar_ui_actions")[0];
-      nav_cont.parentElement.parentElement.parentElement.classList.remove('navbar-right');
-      let nav_cont_parent = nav_cont.parentElement;
-      if(nav_cont_parent.nextSibling.classList.contains('record-paging-nowrap'))
-      {
-        nav_cont_parent.style.marginLeft = "15%";
-        nav_cont_parent.style.marginRight = "15%";
-      }
-      else
-      {
-        //Doesnt' contain up arrow and down arrow.
-        nav_cont_parent.style.marginLeft = "15%";
-        nav_cont_parent.style.marginRight = "30%";
-
+      if (
+        nav_cont.parentElement.classList.contains(
+          "ui_action_container_overflow"
+        )
+      ) {
+        document
+          .querySelector(
+            "#section-1078e6b4db4b33803da8366af4961918\\.header > nav > div > div:nth-child(2)"
+          )
+          .classList.add("navbar-right");
+        nav_cont.style.textAlign = "center";
+        nav_cont.style.marginLeft = "0%";
+      } else {
+        document
+          .querySelector(
+            "#section-1078e6b4db4b33803da8366af4961918\\.header > nav > div > div:nth-child(2)"
+          )
+          .classList.remove("navbar-right");
+        nav_cont.style.marginLeft = "20%";
       }
     }
   }
