@@ -302,9 +302,25 @@
     let lv_iframe_initial_desc = document.getElementById(
       "incident.description_ifr"
     );
-    let lv_init_txt_edit =
-      lv_iframe_initial_desc.contentWindow.document.getElementById("tinymce");
-    lv_init_txt_edit.style.font = text_area_font;
+
+    if(lv_iframe_initial_desc != null)
+    {
+        formatInitialDescTextArea(lv_iframe_initial_desc);
+    }
+    else
+    { //Firefox sometimes delaying to load
+        waitForElm("#incident.description_ifr").then((elm) => {
+            formatInitialDescTextArea(elm)
+        });
+    }
+
+    function formatInitialDescTextArea(lv_iframe)
+    {
+        let lv_init_txt_edit =
+            lv_iframe.contentWindow.document.getElementById("tinymce");
+        lv_init_txt_edit.style.font = text_area_font;
+    }
+
   }
 
   function hideSystemAndRelatedRec() {
