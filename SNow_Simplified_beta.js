@@ -765,7 +765,7 @@
                 break;
               case "#text":
                 new_html =
-                  new_html + format_answer(text_area_elements[i].nodeValue);
+                  new_html + format_answer(text_area_elements[i].nodeValue.trim());
                 break;
               case "A":
                 break;
@@ -789,7 +789,7 @@
                   new_html_p = new_html_p + "<br>";
                   break;
                 case "#text":
-                  new_html_p = new_html_p + format_answer(p_nodes[j].nodeValue);
+                  new_html_p = new_html_p + format_answer(p_nodes[j].nodeValue.trim());
                   break;
                 case "A":
                   new_html_p = new_html_p + parseAnchor(p_nodes[j]);
