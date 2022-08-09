@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SNow_Simplified
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
@@ -264,25 +264,34 @@
 
   function processResolutionTab() {
     //Resulution Tab
+
+    waitForElm("#incident.close_notes_ifr").then((elm) => {
+      formatResContent(elm)
+    });
+
     let lv_iframe_res_desc = document.getElementById(
         "incident.close_notes_ifr"
     );
 
-    lv_iframe_res_desc.style.height = "200px";
-    //Resolution tab - increase height of the text area
-    let lv_resol_txt_edit =
-        lv_iframe_res_desc.contentWindow.document.getElementById("tinymce");
-    lv_resol_txt_edit.style.font = text_area_font;
+    function formatResContent(elm)
+    {
+      elm.style.height = "200px";
+      //Resolution tab - increase height of the text area
+      let lv_resol_txt_edit =
+          elm.contentWindow.document.getElementById("tinymce");
+      lv_resol_txt_edit.style.font = text_area_font;
 
-    if (enable_resolution_fields_default) {
-      document.getElementById("incident.close_code").value =
-          "solved_fix_provided";
-      document.getElementById("incident.u_affected_area").value = "application";
-      document.getElementById("incident.u_symptom").value = "other_specify";
-      if (!document.getElementById("ni.incident.u_notes_to_comments").checked) {
-        document.getElementById("ni.incident.u_notes_to_comments").click();
+      if (enable_resolution_fields_default) {
+        document.getElementById("incident.close_code").value =
+            "solved_fix_provided";
+        document.getElementById("incident.u_affected_area").value = "application";
+        document.getElementById("incident.u_symptom").value = "other_specify";
+        if (!document.getElementById("ni.incident.u_notes_to_comments").checked) {
+          document.getElementById("ni.incident.u_notes_to_comments").click();
+        }
       }
     }
+
   }
 
   function processInitialDescTab() {
