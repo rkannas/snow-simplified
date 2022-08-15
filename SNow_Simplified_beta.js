@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SNow_Simplified_Beta
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
@@ -88,22 +88,22 @@
   //--------increase font size for Text Area--------------------------
   // Message box font parameters..
   const text_area_font =
-    'normal 400 13px/21px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+      'normal 400 13px/21px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 
   //--------Activities related variables------------------------------
 
   const activity_def_font =
-    'normal 400 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+      'normal 400 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 
   //-----------Activities Descriptions Default font--------------------
   const activity_def_info_font =
-    'normal 400 14px/21px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+      'normal 400 14px/21px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 
   const activity_ext_type_color = "#dd9119";
   const activity_int_type_color = "#3498DB";
 
   const activity_weighted_font =
-    'normal 600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+      'normal 600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 
   //--------------------Incident List Filter page----------------------
   const incident_filter_list_page_font_size = "15px";
@@ -182,7 +182,7 @@
   ];
 
   const expand_btn_css =
-    ".expand { background-color: #e0f5f0;color: #007958; cursor: pointer;padding: 2px 10px 3px 10px;text-decoration: none;margin-right: 10px;border-radius: 4px; box-sizing: border-box;font-weight: 500;border: 1px solid #b4e5d9; }";
+      ".expand { background-color: #e0f5f0;color: #007958; cursor: pointer;padding: 2px 10px 3px 10px;text-decoration: none;margin-right: 10px;border-radius: 4px; box-sizing: border-box;font-weight: 500;border: 1px solid #b4e5d9; }";
   const console_css = "color:#c411e8;font-weight: 600"; // Default color to print in console (Works only in chrome)
 
   GM_addStyle(expand_btn_css); // will be used in Field Changes Block for expand hide.
@@ -207,12 +207,12 @@
     }, 3000);
 
     window.addEventListener(
-      "load",
-      function () {
-        print("Load event Completed");
-        simplifySnow();
-      },
-      false
+        "load",
+        function () {
+          print("Load event Completed");
+          simplifySnow();
+        },
+        false
     );
   }
 
@@ -221,9 +221,9 @@
   function simplifySnow() {
     if (window.self.name !== "undefined" && window.self.name == "gsft_main") {
       if (
-        document.title !== "undefined" &&
-        document.title.includes("| Incident | HCSM") && //Incident Detail page
-        document.title.search("Create") < 0 //Skip Create Incident Page
+          document.title !== "undefined" &&
+          document.title.includes("| Incident | HCSM") && //Incident Detail page
+          document.title.search("Create") < 0 //Skip Create Incident Page
       ) {
         print("Start Processing Incident Window");
         processHeaderToolbar(); //Toolbar with buttons
@@ -236,8 +236,8 @@
       }
       //Filter incidents page ...
       else if (
-        document.title !== "undefined" &&
-        document.title == "Incidents | HCSM"
+          document.title !== "undefined" &&
+          document.title == "Incidents | HCSM"
       ) {
         processListPage();
       }
@@ -263,15 +263,31 @@
   }
 
   function processResolutionTab() {
-    //Resulution Tab
+    //Resolution Tab
 
     waitForElm("#incident.close_notes_ifr").then((elm) => {
       formatResContent(elm)
     });
 
     let lv_iframe_res_desc = document.getElementById(
-      "incident.close_notes_ifr"
+        "incident.close_notes_ifr"
     );
+
+    //Add the default values button
+
+    let sym_addon_elm = document.querySelector("#element\\.incident\\.u_symptom")
+    let but_def_res = document.createElement("span");
+    but_def_res.innerHTML = "Default Values";
+    but_def_res.classList.add("expand");
+    but_def_res.style.marginTop = "23px";
+
+    let res_def_handler = function () {
+      SetDefaultResValues();
+    };
+    but_def_res.onclick = res_def_handler;
+    sym_addon_elm = sym_addon_elm.append(but_def_res);
+
+
 
     function formatResContent(elm)
     {
@@ -282,14 +298,20 @@
       lv_resol_txt_edit.style.font = text_area_font;
 
       if (enable_resolution_fields_default) {
-        document.getElementById("incident.close_code").value =
-            "solved_fix_provided";
-        document.getElementById("incident.u_affected_area").value = "application";
-        document.getElementById("incident.u_symptom").value = "other_specify";
-        if (!document.getElementById("ni.incident.u_notes_to_comments").checked) {
-          document.getElementById("ni.incident.u_notes_to_comments").click();
-        }
+        SetDefaultResValues();
       }
+    }
+  }
+
+
+  function SetDefaultResValues()
+  {
+    document.getElementById("incident.close_code").value =
+        "solved_fix_provided";
+    document.getElementById("incident.u_affected_area").value = "application";
+    document.getElementById("incident.u_symptom").value = "other_specify";
+    if (!document.getElementById("ni.incident.u_notes_to_comments").checked) {
+      document.getElementById("ni.incident.u_notes_to_comments").click();
     }
 
   }
@@ -297,11 +319,11 @@
   function processInitialDescTab() {
     if (hide_related_searches_button) {
       let lv_desc_section = document.getElementById(
-        "0fdb6af8db4b33803da8366af4961947"
+          "0fdb6af8db4b33803da8366af4961947"
       );
       if (lv_desc_section != null) {
         let lv_rel_search_section =
-          lv_desc_section.getElementsByClassName("custom-form-group");
+            lv_desc_section.getElementsByClassName("custom-form-group");
         lv_rel_search_section[0].style.display = "none";
         lv_rel_search_section[1].style.display = "none";
       }
@@ -309,25 +331,25 @@
     //Increase the font size of Text Area
     //Inital Description  Tab
     let lv_iframe_initial_desc = document.getElementById(
-      "incident.description_ifr"
+        "incident.description_ifr"
     );
 
     if(lv_iframe_initial_desc != null)
     {
-        formatInitialDescTextArea(lv_iframe_initial_desc);
+      formatInitialDescTextArea(lv_iframe_initial_desc);
     }
     else
     { //Firefox sometimes delaying to load
-        waitForElm("#incident.description_ifr").then((elm) => {
-            formatInitialDescTextArea(elm)
-        });
+      waitForElm("#incident.description_ifr").then((elm) => {
+        formatInitialDescTextArea(elm)
+      });
     }
 
     function formatInitialDescTextArea(lv_iframe)
     {
-        let lv_init_txt_edit =
-            lv_iframe.contentWindow.document.getElementById("tinymce");
-        lv_init_txt_edit.style.font = text_area_font;
+      let lv_init_txt_edit =
+          lv_iframe.contentWindow.document.getElementById("tinymce");
+      lv_init_txt_edit.style.font = text_area_font;
     }
 
   }
@@ -357,7 +379,7 @@
         let lv_tabs2_list_cont = document.getElementById("tabs2_list");
 
         let lv_tab_sep_list =
-          lv_tabs2_list_cont.getElementsByClassName("tab_spacer"); //Seperator for each tab
+            lv_tabs2_list_cont.getElementsByClassName("tab_spacer"); //Seperator for each tab
         if (lv_tab_sep_list.length > 0) {
           for (let i = 0; i < lv_tab_sep_list.length; i++) {
             lv_tab_sep_list[i].style.display = "none";
@@ -365,7 +387,7 @@
         }
 
         let lv_tab_list =
-          lv_tabs2_list_cont.getElementsByClassName("tab_header");
+            lv_tabs2_list_cont.getElementsByClassName("tab_header");
 
         if (lv_tab_list.length > 0) {
           for (let i = 0; i < lv_tab_list.length; i++) {
@@ -402,7 +424,7 @@
     function hideChildTabCont(childElemContainer) {
       //Will be called multiple times.
       let lv_tab_sep_list =
-        childElemContainer.getElementsByClassName("tab_spacer"); //Seperator for each tab
+          childElemContainer.getElementsByClassName("tab_spacer"); //Seperator for each tab
       if (lv_tab_sep_list !== "undefined") {
         for (let i = 0; i < lv_tab_sep_list.length; i++) {
           lv_tab_sep_list[i].style.display = "none";
@@ -422,13 +444,13 @@
   function hideBottomToolbarAndLinks() {
     if (hide_bottom_button_bar)
       document.getElementsByClassName(
-        "form_action_button_container"
+          "form_action_button_container"
       )[0].style.display = "none";
 
     //Hide Related links section
     if (hide_related_links) {
       let related_container = document.querySelectorAll(
-        '[aria-label="Related Links"]'
+          '[aria-label="Related Links"]'
       );
       related_container[0].style.display = "none";
     }
@@ -451,7 +473,7 @@
 
     //Add scroll to Top on below activities
     let activities_ul_parent = document.getElementById(
-      "sn_form_inline_stream_entries"
+        "sn_form_inline_stream_entries"
     );
 
     let but_scroll_up = document.createElement("span");
@@ -480,7 +502,7 @@
 
     /*
                             let iframeCommCont = document.getElementById("incident.u_message_ifr"); //Iframe container for text area
-        
+
                               iframeCommCont.style.height = "170px";
                               iframeCommCont.style.font = text_area_font;
                               let textAreaBody = iframeCommCont.contentDocument.getElementById("tinymce");
@@ -494,7 +516,7 @@
 
     //Get Parent of UL Element contains list of activities via li tag
     let activities_ul_cont = document.getElementById(
-      "sn_form_inline_stream_entries"
+        "sn_form_inline_stream_entries"
     );
     let activitiyList = activities_ul_cont.childNodes[0]; // contains list of activities
 
@@ -534,19 +556,19 @@
       let activityTypeNameBox = activityTypeItem.childNodes[0];
       activityTypeNameBox.childNodes[0].style.font = activity_def_font;
       let activity_type =
-        activityTypeItem.childNodes[0].childNodes[0].innerText;
+          activityTypeItem.childNodes[0].childNodes[0].innerText;
 
       if (activity_type == "Internal Info") {
         activityTypeItem.childNodes[0].childNodes[0].style.font =
-          activity_weighted_font;
+            activity_weighted_font;
         activityTypeItem.childNodes[0].childNodes[0].style.color =
-          activity_int_type_color;
+            activity_int_type_color;
         curr_activity_type = "Internal Info";
       } else if (activity_type == "External Info") {
         activityTypeItem.childNodes[0].childNodes[0].style.font =
-          activity_weighted_font;
+            activity_weighted_font;
         activityTypeItem.childNodes[0].childNodes[0].style.color =
-          activity_ext_type_color;
+            activity_ext_type_color;
         curr_activity_type = "External Info";
       } else if (activity_type == "Field changes") {
         field_changes_block_cnt = field_changes_block_cnt + 1; //Count the number of Field Changes
@@ -558,7 +580,7 @@
         }
       } else {
         activityTypeItem.childNodes[0].childNodes[0].style.font =
-          activity_def_font;
+            activity_def_font;
         curr_activity_type = "";
       }
     }
@@ -570,11 +592,11 @@
 
       let expandHandler = function () {
         let lv_vis_status =
-          this.parentElement.parentElement.childNodes[2].style.display;
+            this.parentElement.parentElement.childNodes[2].style.display;
         if (lv_vis_status == "none") {
           this.innerHTML = "Collapse";
           this.parentElement.parentElement.childNodes[2].style.display =
-            "inline-block";
+              "inline-block";
         } else {
           this.innerHTML = "Expand";
           this.parentElement.parentElement.childNodes[2].style.display = "none";
@@ -651,78 +673,78 @@
         //Check For Priority
         if (ulList.childNodes[i].childNodes[0].innerText == "Priority") {
           if (
-            parseInt(
-              ulList.childNodes[i].childNodes[1].childNodes[0].innerText.charAt(
-                0
-              )
-            ) < 3
+              parseInt(
+                  ulList.childNodes[i].childNodes[1].childNodes[0].innerText.charAt(
+                      0
+                  )
+              ) < 3
           ) {
             ulList.childNodes[i].childNodes[1].childNodes[0].style.font =
-              activity_weighted_font;
+                activity_weighted_font;
             ulList.childNodes[i].childNodes[1].childNodes[0].style.color =
-              "#ee0935";
+                "#ee0935";
             generateFieldChangeInfoElement(
-              infoCont,
-              ulList.childNodes[i].childNodes[1].childNodes[0].innerText,
-              "#ee0935"
+                infoCont,
+                ulList.childNodes[i].childNodes[1].childNodes[0].innerText,
+                "#ee0935"
             );
           } else {
             ulList.childNodes[i].childNodes[1].childNodes[0].style.font =
-              activity_weighted_font;
+                activity_weighted_font;
             ulList.childNodes[i].childNodes[1].childNodes[0].style.color =
-              "#0f8f3e";
+                "#0f8f3e";
 
             generateFieldChangeInfoElement(
-              infoCont,
-              ulList.childNodes[i].childNodes[1].childNodes[0].innerText,
-              "#0f8f3e"
+                infoCont,
+                ulList.childNodes[i].childNodes[1].childNodes[0].innerText,
+                "#0f8f3e"
             );
           }
         }
         //Check For Assignment Group
         else if (
-          ulList.childNodes[i].childNodes[0].innerText == "Assignment group"
+            ulList.childNodes[i].childNodes[0].innerText == "Assignment group"
         ) {
           ulList.childNodes[i].childNodes[1].childNodes[0].style.font =
-            activity_weighted_font;
+              activity_weighted_font;
           ulList.childNodes[i].childNodes[1].childNodes[0].style.color =
-            "#5a32af";
+              "#5a32af";
 
           generateFieldChangeInfoElement(
-            infoCont,
-            ulList.childNodes[i].childNodes[1].childNodes[0].innerText,
-            "#5a32af"
+              infoCont,
+              ulList.childNodes[i].childNodes[1].childNodes[0].innerText,
+              "#5a32af"
           );
         }
         // Check for State Change
         else if (ulList.childNodes[i].childNodes[0].innerText == "State") {
           if (
-            ulList.childNodes[i].childNodes[1].childNodes[0].innerText ==
-            "Resolved"
+              ulList.childNodes[i].childNodes[1].childNodes[0].innerText ==
+              "Resolved"
           ) {
             is_prev_field_change_sol_provided = true;
             generateFieldChangeInfoElement(
-              infoCont,
-              "Solution Provided",
-              "green"
+                infoCont,
+                "Solution Provided",
+                "green"
             );
           } else if (
-            ulList.childNodes[i].childNodes[1].childNodes[0].innerText ==
+              ulList.childNodes[i].childNodes[1].childNodes[0].innerText ==
               "In Progress" &&
-            ulList.childNodes[i].childNodes[1].childNodes[2].innerText ==
+              ulList.childNodes[i].childNodes[1].childNodes[2].innerText ==
               "Resolved"
           ) {
             is_prev_field_change_sol_rejected = true;
             generateFieldChangeInfoElement(
-              infoCont,
-              "Solution Rejected",
-              "red"
+                infoCont,
+                "Solution Rejected",
+                "red"
             );
           } else {
             generateFieldChangeInfoElement(
-              infoCont,
-              ulList.childNodes[i].childNodes[1].childNodes[0].innerText,
-              "#2874A6"
+                infoCont,
+                ulList.childNodes[i].childNodes[1].childNodes[0].innerText,
+                "#2874A6"
             );
           }
         }
@@ -749,15 +771,15 @@
         //format Priority
         if (ulList.childNodes[i].childNodes[0].innerText == "Priority") {
           ulList.childNodes[i].childNodes[1].style.color =
-            parseInt(ulList.childNodes[i].childNodes[1].innerText.charAt(0)) < 3
-              ? "red"
-              : "green";
+              parseInt(ulList.childNodes[i].childNodes[1].innerText.charAt(0)) < 3
+                  ? "red"
+                  : "green";
         } else if (
-          ulList.childNodes[i].childNodes[0].innerText == "Description"
+            ulList.childNodes[i].childNodes[0].innerText == "Description"
         ) {
           let desc_content_div =
-            ulList.childNodes[i].childNodes[1].childNodes[0].shadowRoot
-              .childNodes[0];
+              ulList.childNodes[i].childNodes[1].childNodes[0].shadowRoot
+                  .childNodes[0];
 
           desc_content_div.style.font = activity_def_font;
           let text_area_elements = desc_content_div.childNodes;
@@ -774,13 +796,13 @@
                 break;
               case "#text":
                 new_html =
-                  new_html + format_answer(text_area_elements[i].nodeValue.trim());
+                    new_html + format_answer(text_area_elements[i].nodeValue.trim());
                 break;
               case "A":
                 break;
               default:
                 console.log(
-                  "<---------------------some other element------------>"
+                    "<---------------------some other element------------>"
                 );
                 break;
             }
@@ -805,7 +827,7 @@
                   break;
                 default:
                   console.log(
-                    "<---------------------some other element------------>"
+                      "<---------------------some other element------------>"
                   );
                   break;
               }
@@ -819,12 +841,12 @@
             let a_html = "<a";
             for (let k = 0; k < aElem.attributes.length; k++) {
               a_html =
-                a_html +
-                " " +
-                aElem.attributes[k].nodeName +
-                '="' +
-                aElem.attributes[k].nodeValue +
-                '"';
+                  a_html +
+                  " " +
+                  aElem.attributes[k].nodeName +
+                  '="' +
+                  aElem.attributes[k].nodeValue +
+                  '"';
             }
             a_html = a_html + ">";
             a_html = a_html + aElem.innerHTML + "</a>";
@@ -838,9 +860,9 @@
               return text_msg;
             } else {
               return (
-                '<span style="margin-left:20px;color:' + requester_post_answer_color +'">' +
-                text_msg +
-                "</span>"
+                  '<span style="margin-left:20px;color:' + requester_post_answer_color +'">' +
+                  text_msg +
+                  "</span>"
               );
             }
           }
@@ -858,15 +880,15 @@
         //format Priority
         if (ulList.childNodes[i].childNodes[0].innerText == "Priority") {
           ulList.childNodes[i].childNodes[1].style.color =
-            parseInt(ulList.childNodes[i].childNodes[1].innerText.charAt(0)) < 3
-              ? "red"
-              : "green";
+              parseInt(ulList.childNodes[i].childNodes[1].innerText.charAt(0)) < 3
+                  ? "red"
+                  : "green";
         } else if (
-          ulList.childNodes[i].childNodes[0].innerText == "Description"
+            ulList.childNodes[i].childNodes[0].innerText == "Description"
         ) {
           let desc_content_div =
-            ulList.childNodes[i].childNodes[1].childNodes[0].shadowRoot
-              .childNodes[0];
+              ulList.childNodes[i].childNodes[1].childNodes[0].shadowRoot
+                  .childNodes[0];
 
           let FindAnchors = desc_content_div.getElementsByTagName("a"); //If any anchors tags are there dont format the initial Submission
 
@@ -887,18 +909,18 @@
               } else {
                 if (i == 0) {
                   new_html_cont =
-                    new_html_cont +
-                    "<div style='color:" +
-                    requester_post_answer_color +
-                    ";display:block;margin-left:25px;'>";
-                  new_html_cont = new_html_cont + curr_line + "</div>";
-                } else {
-                  if (curr_line !== "") {
-                    new_html_cont =
                       new_html_cont +
                       "<div style='color:" +
                       requester_post_answer_color +
                       ";display:block;margin-left:25px;'>";
+                  new_html_cont = new_html_cont + curr_line + "</div>";
+                } else {
+                  if (curr_line !== "") {
+                    new_html_cont =
+                        new_html_cont +
+                        "<div style='color:" +
+                        requester_post_answer_color +
+                        ";display:block;margin-left:25px;'>";
                     new_html_cont = new_html_cont + curr_line + "</div>";
                   }
                 }
@@ -940,12 +962,12 @@
     if (header_info_increase_width_left) {
       if (isElementIdExists("1078e6b4db4b33803da8366af4961918")) {
         document
-          .getElementById("1078e6b4db4b33803da8366af4961918")
-          .childElements()[0].childNodes[1].style.width = "40%";
+            .getElementById("1078e6b4db4b33803da8366af4961918")
+            .childElements()[0].childNodes[1].style.width = "40%";
         //Increase left side header section to 60%
         document
-          .getElementById("1078e6b4db4b33803da8366af4961918")
-          .childElements()[0].childNodes[0].style.width = "60%";
+            .getElementById("1078e6b4db4b33803da8366af4961918")
+            .childElements()[0].childNodes[0].style.width = "60%";
       }
     }
   }
@@ -990,7 +1012,7 @@
     if (align_but_center) {
       alignTopButtons();
       let header_but_toolbar_cont = document.getElementById(
-        "section-1078e6b4db4b33803da8366af4961918.header"
+          "section-1078e6b4db4b33803da8366af4961918.header"
       );
 
       let navObserver = new MutationObserver(function (mutations) {
@@ -1009,23 +1031,23 @@
     function alignTopButtons() {
       let nav_cont = document.getElementsByClassName("navbar_ui_actions")[0];
       if (
-        nav_cont.parentElement.classList.contains(
-          "ui_action_container_overflow"
-        )
+          nav_cont.parentElement.classList.contains(
+              "ui_action_container_overflow"
+          )
       ) {
         document
-          .querySelector(
-            "#section-1078e6b4db4b33803da8366af4961918\\.header > nav > div > div:nth-child(2)"
-          )
-          .classList.add("navbar-right");
+            .querySelector(
+                "#section-1078e6b4db4b33803da8366af4961918\\.header > nav > div > div:nth-child(2)"
+            )
+            .classList.add("navbar-right");
         nav_cont.style.textAlign = "center";
         nav_cont.style.marginLeft = "0%";
       } else {
         document
-          .querySelector(
-            "#section-1078e6b4db4b33803da8366af4961918\\.header > nav > div > div:nth-child(2)"
-          )
-          .classList.remove("navbar-right");
+            .querySelector(
+                "#section-1078e6b4db4b33803da8366af4961918\\.header > nav > div > div:nth-child(2)"
+            )
+            .classList.remove("navbar-right");
         nav_cont.style.marginLeft = "20%";
       }
     }
@@ -1064,7 +1086,7 @@
     //  incident_filter_list_font;
 
     document.getElementById("incident_expanded").childNodes[4].style.fontSize =
-      incident_filter_list_page_font_size;
+        incident_filter_list_page_font_size;
     // Hide Timing Statistics
     waitForElm("#page_timing_div").then((elm) => {
       hideElementById("page_timing_div");
@@ -1075,8 +1097,8 @@
     if (!listPageLoaded) {
       if (window.self.name !== "undefined" && window.self.name == "gsft_main") {
         if (
-          document.title !== "undefined" &&
-          document.title == "Incidents | HCSM" //Incidents Filter Page
+            document.title !== "undefined" &&
+            document.title == "Incidents | HCSM" //Incidents Filter Page
         ) {
           print("Triggered Custom Load Event");
           //Trigger load event if it is not triggered already
@@ -1135,8 +1157,8 @@
 
   function detectBrowser() {
     if (
-      (navigator.userAgent.indexOf("Opera") ||
-        navigator.userAgent.indexOf("OPR")) != -1
+        (navigator.userAgent.indexOf("Opera") ||
+            navigator.userAgent.indexOf("OPR")) != -1
     ) {
       return "Opera";
     } else if (navigator.userAgent.indexOf("Chrome") != -1) {
@@ -1146,8 +1168,8 @@
     } else if (navigator.userAgent.indexOf("Firefox") != -1) {
       return "Firefox";
     } else if (
-      navigator.userAgent.indexOf("MSIE") != -1 ||
-      !!document.documentMode == true
+        navigator.userAgent.indexOf("MSIE") != -1 ||
+        !!document.documentMode == true
     ) {
       return "IE"; //crap
     } else {

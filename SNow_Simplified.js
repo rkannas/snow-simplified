@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SNow_Simplified
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
@@ -127,6 +127,8 @@
     "1.Please provide Landscape details and System ID/Client. Also explicitly mention if it is a private landscape/ Cloud Tenant (if it is cloud systems then provide tenant /logon).",
     "e.g.:  GSA - Public MG4/001 HE4/400 or S/4HC E0T (provide tenant URL)",
     "2.  Demo Scenario ID & Page Number (if applicable)? - Error description and steps to reproduce the error with screenshot/recordings.",
+    "2. Demo Scenario ID & Page Number (if applicable)? - Error description and steps to reproduce the error with screenshot/recordings.",
+
     "3. Demo date & time and Demo ID (if applicable)?",
     "4. Please provide affected demo Users [ eg. purchaser or a personal demo user ( I/C/D) ]?",
     "5. Are you accessing Secure Demo Access or Storefront /Citrix Desktop? (*applicable for SDE landscape only)",
@@ -149,6 +151,7 @@
     "b. Steps to recreate the issue (screen shots or screen cam)",
     "c. Master Data used (PO, Inv, contract...)",
     "----------------------------------",
+
   ];
 
   var curr_activity_type = "";
@@ -263,7 +266,7 @@
   }
 
   function processResolutionTab() {
-    //Resulution Tab
+    //Resolution Tab
 
     waitForElm("#incident.close_notes_ifr").then((elm) => {
       formatResContent(elm)
@@ -272,6 +275,22 @@
     let lv_iframe_res_desc = document.getElementById(
         "incident.close_notes_ifr"
     );
+
+    //Add the default values button
+
+    let sym_addon_elm = document.querySelector("#element\\.incident\\.u_symptom")
+    let but_def_res = document.createElement("span");
+    but_def_res.innerHTML = "Default Values";
+    but_def_res.classList.add("expand");
+    but_def_res.style.marginTop = "23px";
+
+    let res_def_handler = function () {
+      SetDefaultResValues();
+    };
+    but_def_res.onclick = res_def_handler;
+    sym_addon_elm = sym_addon_elm.append(but_def_res);
+
+
 
     function formatResContent(elm)
     {
@@ -282,14 +301,20 @@
       lv_resol_txt_edit.style.font = text_area_font;
 
       if (enable_resolution_fields_default) {
-        document.getElementById("incident.close_code").value =
-            "solved_fix_provided";
-        document.getElementById("incident.u_affected_area").value = "application";
-        document.getElementById("incident.u_symptom").value = "other_specify";
-        if (!document.getElementById("ni.incident.u_notes_to_comments").checked) {
-          document.getElementById("ni.incident.u_notes_to_comments").click();
-        }
+        SetDefaultResValues();
       }
+    }
+  }
+
+
+  function SetDefaultResValues()
+  {
+    document.getElementById("incident.close_code").value =
+        "solved_fix_provided";
+    document.getElementById("incident.u_affected_area").value = "application";
+    document.getElementById("incident.u_symptom").value = "other_specify";
+    if (!document.getElementById("ni.incident.u_notes_to_comments").checked) {
+      document.getElementById("ni.incident.u_notes_to_comments").click();
     }
 
   }
@@ -626,8 +651,15 @@
 
     //Format Field Changes Container
     function formatActivityFieldChanges(infoCont) {
-      if (field_changes_block_cnt == 1) {
-        formatActivityInitialSubmissionFiledChanges(infoCont); //Only First post by Requester
+      if (field_changes_block_cnt == 1 ) {
+        if(infoCont.childNodes[0].childNodes[0].nodeName == "UL")
+          formatActivityInitialSubmissionFiledChanges(infoCont); //Only First post by Requester
+        else
+        {
+          //Sometimes Field changes only contains Video and also it will be the First Block
+          field_changes_block_cnt = 0;
+          formatActivityFieldChangesOther(infoCont);
+        }
       } else {
         formatActivityFieldChangesOther(infoCont);
       }
