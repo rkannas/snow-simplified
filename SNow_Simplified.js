@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SNow_Simplified
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
@@ -288,9 +288,9 @@
       SetDefaultResValues();
     };
     but_def_res.onclick = res_def_handler;
-    sym_addon_elm = sym_addon_elm.append(but_def_res);
+    let lastElm =  sym_addon_elm.lastElementChild;
 
-
+      lastElm.insertBefore(but_def_res,null);
 
     function formatResContent(elm)
     {
