@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SNow_Simplified
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
@@ -237,6 +237,16 @@
         hideBottomChildTabs();
         autoDiscardOnBackButton();
       }
+      else if (
+          document.title !== "undefined" &&
+          document.title.includes("Catalog Task | HCSM") && //Task Detail Page
+          document.title.search("Create") < 0 //Skip Create Incident Page
+      )
+      {
+        print("Start Processing Task Window");
+        processActivityList();
+
+      }
       //Filter incidents page ...
       else if (
           document.title !== "undefined" &&
@@ -290,7 +300,7 @@
     but_def_res.onclick = res_def_handler;
     let lastElm =  sym_addon_elm.lastElementChild;
 
-      lastElm.insertBefore(but_def_res,null);
+    lastElm.insertBefore(but_def_res,null);
 
     function formatResContent(elm)
     {
