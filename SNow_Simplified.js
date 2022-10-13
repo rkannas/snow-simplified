@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SNow_Simplified
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @description  Simplified HSCM Service Now Portal
 // @author       Rajesh Kanna S
 // @match        https://itsm.services.sap/*
@@ -70,7 +70,7 @@
 
   //---------------Default Message Type -----------------------------
   // Communication tab default message type. comments => External Info, work_notes => Internal Info
-  const default_msg_type = "work_notes";
+  //const default_msg_type = "work_notes"; //SAP removed this field
 
   //-----------Default Resolution information fields(UX Team)----------
   //Set default values
@@ -266,7 +266,7 @@
 
   function processMidSectionTabs() {
     //Set default Message type to Internal ..
-    document.getElementById("incident.u_message_type").value = default_msg_type;
+   // document.getElementById("incident.u_message_type").value = default_msg_type;
     processCommTabTextArea();
     processActivityList();
     addPageScrollButtons();
@@ -471,7 +471,7 @@
 
   function addPageScrollButtons() {
     //Add page bottom on communication element page
-    let comm_elm = document.getElementById("element.incident.u_message");
+    let comm_elm = document.getElementById("element.incident.u_draft");
     let but_scroll_down = document.createElement("span");
     but_scroll_down.innerHTML = "Scroll botton";
     but_scroll_down.classList.add("expand");
